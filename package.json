@@ -1,0 +1,34 @@
+{
+  "name": "ava-lockup-contracts",
+  "version": "1.0.0",
+  "description": "AVA+ Earn Lockup Contracts.",
+  "scripts": {
+    "clean": "rimraf artifacts cache typechain-types",
+    "compile": "npm run clean && npx hardhat compile",
+    "test": "npx hardhat test",
+    "code-coverage": "npx hardhat coverage",
+    "deploy-hardhat": "npx hardhat run scripts/deploy-daily-earn-lockup.ts --network hardhat",
+    "deploy-iotaEvmTestnet": "npx hardhat run scripts/deploy-daily-earn-lockup.ts --network iotaEvmTestnet",
+    "deploy-ethereumMainnet": "npx hardhat run scripts/deploy-daily-earn-lockup.ts --network ethereumMainnet",
+    "deploy-sepolia": "npx hardhat run scripts/deploy-daily-earn-lockup.ts --network sepolia",
+    "init-user-data-iotaEvmTestnet": "npx hardhat run scripts/init-user-data.ts --network iotaEvmTestnet",
+    "init-user-data-ethereumMainnet": "npx hardhat run scripts/init-user-data.ts --network ethereumMainnet",
+    "update-withdraw-period-iotaEvmTestnet": "npx hardhat run scripts/update-common-withdraw-period.ts --network iotaEvmTestnet",
+    "update-withdraw-period-ethereumMainnet": "npx hardhat run scripts/update-common-withdraw-period.ts --network ethereumMainnet"
+  },
+  "author": "midotrinh@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.26.2",
+    "rimraf": "^5.0.5"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.1.4",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "solidity-coverage": "^0.8.5"
+  }
+}
