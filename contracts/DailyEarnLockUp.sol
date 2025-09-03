@@ -13,7 +13,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
     uint256 public constant PERCENT_FACTOR = 1e3;
 
-    uint256 public constant COMMON_MIN_LOCKUP_AMOUNT = 1 * 1e18; // 1 token
+    uint256 public constant COMMON_MIN_LOCKUP_AMOUNT = 250 * 1e18; // 250 tokens
     uint256 public constant COMMON_MIN_WITHDRAW_PERIOD = 30 days;
     uint256 public constant COMMON_APR = 50; // 50 means 5% or 75 means 7.5%
 
@@ -123,6 +123,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     );
     event EvtDeactivateUser(string userId);
     event EvtActivateUser(string userId);
+    event EvtWithdrawByAdmin(address indexed recipient, uint256 amount);
 
     constructor(address _lockupToken, address _communityWallet) {
         lockupToken = IERC20(_lockupToken);
@@ -419,7 +420,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             lockupToken.safeTransfer(msg.sender, withdrawAmount - fee);
 
             // Transfer fee to the community wallet if any. Fee can also be disabled by setting to zero
-            if (fee > 0) {
+            if (fee > 0 && communityWallet != address(0)) {
                 lockupToken.safeTransfer(communityWallet, fee);
             }
         }
@@ -672,6 +673,19 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         );
     }
 
+    function withdrawByAdmin(
+        address recipient,
+        uint256 amount
+    ) external isOwner {
+        require(amount > 0, "Invalid amount");
+        require(totalLockedAmount >= amount, "Insufficient locked amount");
+
+        totalLockedAmount -= amount;
+        lockupToken.safeTransfer(recipient, amount);
+
+        emit EvtWithdrawByAdmin(recipient, amount);
+    }
+
     /**
      * @notice Set the membership type for a specific wallet address.
      */
@@ -690,10 +704,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function setImmediateWithdrawalFee(
         uint256 _immediateWithdrawalFee
     ) external isOwner {
-        require(
-            _immediateWithdrawalFee > 0,
-            "Immediate withdrawal fee cannot be zero"
-        );
+        // can be zero
         immediateWithdrawalFee = _immediateWithdrawalFee;
 
         emit EvtSetImmediateWithdrawalFee(_immediateWithdrawalFee);
@@ -703,6 +714,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      * @notice Set the community wallet address
      */
     function setCommunityWallet(address _communityWallet) external isOwner {
+        // communityWallet can be address(0)
         communityWallet = _communityWallet;
 
         emit EvtSetCommunityWallet(_communityWallet);
@@ -721,6 +733,28 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         maxTotalLockedAmount = _maxTotalLockedAmount;
 
         emit EvtSetMaxTotalLockedAmount(_maxTotalLockedAmount);
+    }
+
+    function updateCommonMinLockupAmount(
+        uint256 newMinLockupAmount
+    ) external isOwner {
+        membershipTypeToCondition[MembershipType.SmartSteel]
+            .minLockupAmountPerTx = newMinLockupAmount;
+
+        membershipTypeToCondition[MembershipType.SmartBronze]
+            .minLockupAmountPerTx = newMinLockupAmount;
+
+        membershipTypeToCondition[MembershipType.SmartSilver]
+            .minLockupAmountPerTx = newMinLockupAmount;
+
+        membershipTypeToCondition[MembershipType.SmartGold]
+            .minLockupAmountPerTx = newMinLockupAmount;
+
+        membershipTypeToCondition[MembershipType.SmartPlatinum]
+            .minLockupAmountPerTx = newMinLockupAmount;
+
+        membershipTypeToCondition[MembershipType.SmartDiamond]
+            .minLockupAmountPerTx = newMinLockupAmount;
     }
 
     function updateCommonWithdrawPeriod(

@@ -16,7 +16,7 @@ describe("Test if daily earnings are correctly calculated for locked tokens", ()
   let AVATokenContract: MockAVA;
   let AVATokenContractAddress: string;
 
-  let COMMON_MIN_LOCKUP_AMOUNT = BigInt(1 * 10 ** 18); // 1 
+  let COMMON_MIN_LOCKUP_AMOUNT = BigInt(250 * 10 ** 18); // 250 tokens
   let THIRTY_DAYS = 30 * 24 * 60 * 60; // 30 days in seconds
   let COMMON_MIN_WITHDRAW_PERIOD = BigInt(THIRTY_DAYS); // 30 days in seconds
   let COMMON_APR = BigInt(50); // 50 means 5% or 75 means 7.5%

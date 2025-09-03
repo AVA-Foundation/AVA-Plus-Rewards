@@ -1,6 +1,10 @@
 import { ethers, network } from "hardhat";
 import { DailyEarnLockUp } from "../typechain-types";
 
+// Only for testnet
+// 10 minutes
+const NEW_WITHDRAW_PERIOD = 10 * 60;
+
 async function deployDailyEarnLockUp(
   AVATokenContractAddress: string,
   communityWallet: string,
@@ -20,10 +24,10 @@ async function deployDailyEarnLockUp(
   }
 
   if (network.name === "iotaEvmTestnet") {
-    // On testnet, set withdraw period to 1 day
-    const tx = await DailyEarnLockUpContract.updateCommonWithdrawPeriod(24 * 60 * 60);
+    // On testnet, set withdraw period to 10 minutes
+    const tx = await DailyEarnLockUpContract.updateCommonWithdrawPeriod(NEW_WITHDRAW_PERIOD);
     await tx.wait();
-    console.log(`updateCommonWithdrawPeriod to 1 day - Tx: ${tx.hash}`);
+    console.log(`updateCommonWithdrawPeriod to 10 minutes - Tx: ${tx.hash}`);
   }
 
   return DailyEarnLockUpContract;

@@ -1,8 +1,8 @@
 import { ethers, network } from "hardhat";
 import fs from "fs";
 
-// 1 day
-const NEW_WITHDRAW_PERIOD = 1 * 24 * 60 * 60;
+// 10 minutes
+const NEW_WITHDRAW_PERIOD = 10 * 60;
 
 async function updateCommonWithdrawPeriod() {
 
