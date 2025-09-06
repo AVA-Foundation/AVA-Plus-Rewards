@@ -233,6 +233,11 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             "new lockedAmount and currentLockedAmount exceeds maxLockupAmountPerTotal"
         );
 
+        require(
+            userIdToLockupStats[userId].withdrawReqAmount == 0,
+            "Pending withdrawal request exists"
+        );
+
         require(!userIdToLockupStats[userId].deactivated, "User deactivated");
     }
 
@@ -471,6 +476,24 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             );
     }
 
+    function _getLockedAmountChecked(
+        address walletAddress,
+        uint256 lockedAmount
+    ) private view returns (uint256) {
+        string memory userId = _getUserId(walletAddress);
+        MembershipType membershipType = userIdToMembershipType[userId];
+        LockupCondition
+            memory membershipTypeCondition = membershipTypeToCondition[
+                membershipType
+            ];
+
+        if (lockedAmount > membershipTypeCondition.maxLockupAmountPerTotal) {
+            return membershipTypeCondition.maxLockupAmountPerTotal;
+        } else {
+            return lockedAmount;
+        }
+    }
+
     /**
      * @notice Get claimable amount and the number of elapsed days since last time for a given walletAddress.
      */
@@ -488,13 +511,18 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             return (0, 0);
         }
 
+        uint256 lockedAmountChecked = _getLockedAmountChecked(
+            walletAddress,
+            lockedAmount
+        );
+
         // Determine the time elapsed since the last claim.
         uint256 timeElapsedSinceLastClaim = block.timestamp - lastTimeStamp;
         // Calculate the number of full days that have passed.
         uint256 daysPassedSinceLastClaim = timeElapsedSinceLastClaim / 1 days;
 
         if (daysPassedSinceLastClaim > 0) {
-            uint256 earn = (lockedAmount *
+            uint256 earn = (lockedAmountChecked *
                 getTotalApr(walletAddress) *
                 daysPassedSinceLastClaim) / (PERCENT_FACTOR * 365);
 
