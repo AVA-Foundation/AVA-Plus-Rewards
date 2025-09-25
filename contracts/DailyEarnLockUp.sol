@@ -438,6 +438,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function claim() external whenNotPaused nonReentrant {
         string memory userId = _getUserId(msg.sender);
+        require(!userIdToLockupStats[userId].deactivated, "User deactivated");
         uint256 earn = _claimReward(userId, msg.sender);
         require(earn > 0, "Not yet time to earn. Retry later.");
     }
@@ -544,7 +545,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         string memory userId,
         address walletAddress
     ) internal returns (uint256) {
-        require(!userIdToLockupStats[userId].deactivated, "User deactivated");
+        // De-activated user cannot claim any earn
+        if (userIdToLockupStats[userId].deactivated) {
+            return 0;
+        }
 
         (
             uint256 earn,
