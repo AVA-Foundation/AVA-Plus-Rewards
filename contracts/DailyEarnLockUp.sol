@@ -577,6 +577,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function deactivateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
 
+        // Auto send any accrued rewards before deactivation.
+        address walletAddress = userIdToWalletAddress[userId];
+        _claimReward(userId, walletAddress);
+
         userIdToLockupStats[userId].deactivated = true;
 
         emit EvtDeactivateUser(userId);
