@@ -545,7 +545,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         string memory userId,
         address walletAddress
     ) internal returns (uint256) {
-        // De-activated user cannot claim any earn
+        // De-activated user cannot get any earn
         if (userIdToLockupStats[userId].deactivated) {
             return 0;
         }
@@ -576,6 +576,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function deactivateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
+        require(userIdToLockupStats[userId].deactivated == false, "userId already deactivated");
 
         // Auto send any accrued rewards before deactivation.
         address walletAddress = userIdToWalletAddress[userId];
@@ -591,8 +592,13 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function activateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
+        require(userIdToLockupStats[userId].deactivated == true, "userId already activated");
 
         userIdToLockupStats[userId].deactivated = false;
+
+        // This ensures that, after being re-activated from the previous deactivation,
+        // the "lastTimeStamp" (i.e. start time for accrued rewards) is updated to the time-being.
+        userIdToLockupStats[userId].lastTimeStamp = block.timestamp;
 
         emit EvtActivateUser(userId);
     }
