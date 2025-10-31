@@ -354,10 +354,14 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         LockupStats storage stats = userIdToLockupStats[userId];
         require(stats.withdrawReqTimeStamp > 0, "No withdrawal request exists");
 
-        (uint256 earn, ) = getEarnAmountFromWithdrawRequest(msg.sender);
+        (uint256 earn, uint256 daysPassedSinceLastClaim) = getEarnAmountFromWithdrawRequest(msg.sender);
 
         if (earn > 0) {
+            stats.lastTimeStamp += daysPassedSinceLastClaim * 1 days;
+            stats.earnedAmount += earn;
+
             lockupToken.safeTransfer(msg.sender, earn);
+            emit EvtClaim(msg.sender, earn);
         }
 
         stats.lockedAmount += stats.withdrawReqAmount;
