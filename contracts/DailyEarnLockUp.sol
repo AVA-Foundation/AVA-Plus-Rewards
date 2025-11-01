@@ -349,6 +349,29 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         emit EvtWithdrawRequestSubmit(msg.sender, withdrawnAmount);
     }
 
+    function _claimRewardFromWithdrawRequest(
+        address walletAddress
+    ) private returns (uint256) {
+        string memory userId = _getUserId(walletAddress);
+
+        LockupStats storage stats = userIdToLockupStats[userId];
+
+        (
+            uint256 earn,
+            uint256 daysPassedSinceLastClaim
+        ) = getEarnAmountFromWithdrawRequest(walletAddress);
+
+        if (earn > 0) {
+            stats.lastTimeStamp += daysPassedSinceLastClaim * 1 days;
+            stats.earnedAmount += earn;
+
+            lockupToken.safeTransfer(walletAddress, earn);
+            emit EvtClaim(walletAddress, earn);
+        }
+
+        return earn;
+    }
+
     /**
      * @notice Cancel the submitted withdrawal request.
      */
@@ -358,14 +381,9 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         LockupStats storage stats = userIdToLockupStats[userId];
         require(stats.withdrawReqTimeStamp > 0, "No withdrawal request exists");
 
-        (uint256 earn, uint256 daysPassedSinceLastClaim) = getEarnAmountFromWithdrawRequest(msg.sender);
-
-        if (earn > 0) {
-            stats.lastTimeStamp += daysPassedSinceLastClaim * 1 days;
-            stats.earnedAmount += earn;
-
-            lockupToken.safeTransfer(msg.sender, earn);
-            emit EvtClaim(msg.sender, earn);
+        // De-activated user cannot get any earn
+        if (!userIdToLockupStats[userId].deactivated) {
+            _claimRewardFromWithdrawRequest(msg.sender);
         }
 
         stats.lockedAmount += stats.withdrawReqAmount;
@@ -548,7 +566,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     }
 
     /**
-     * @dev Internal function to claim rewards for a given walletAddress.
+     * @dev Private function to claim rewards for a given walletAddress.
      * It calculates how many full days have passed since the last claim,
      * computes the earn, transfers the earn tokens, and updates lastTimeStamp.
      * @param walletAddress The walletAddress whose rewards are being claimed.
@@ -556,7 +574,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function _claimReward(
         string memory userId,
         address walletAddress
-    ) internal returns (uint256) {
+    ) private returns (uint256) {
         // De-activated user cannot get any earn
         if (userIdToLockupStats[userId].deactivated) {
             return 0;
@@ -588,11 +606,16 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function deactivateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
-        require(userIdToLockupStats[userId].deactivated == false, "userId already deactivated");
+        require(
+            userIdToLockupStats[userId].deactivated == false,
+            "userId already deactivated"
+        );
 
         // Auto send any accrued rewards before deactivation.
         address walletAddress = userIdToWalletAddress[userId];
         _claimReward(userId, walletAddress);
+
+        _claimRewardFromWithdrawRequest(walletAddress);
 
         userIdToLockupStats[userId].deactivated = true;
 
@@ -604,7 +627,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function activateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
-        require(userIdToLockupStats[userId].deactivated == true, "userId already activated");
+        require(
+            userIdToLockupStats[userId].deactivated == true,
+            "userId already activated"
+        );
 
         userIdToLockupStats[userId].deactivated = false;
 
@@ -745,7 +771,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         uint256 amount
     ) external isOwner {
         require(amount > 0, "Invalid amount");
-        require(immediateWithdrawalFeeCollected >= amount, "Insufficient fee collected");
+        require(
+            immediateWithdrawalFeeCollected >= amount,
+            "Insufficient fee collected"
+        );
 
         immediateWithdrawalFeeCollected -= amount;
         lockupToken.safeTransfer(recipient, amount);
