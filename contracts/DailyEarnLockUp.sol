@@ -20,7 +20,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     uint256 public maxTotalLockedAmount = 5_000_000 * 1e18;
     uint256 public totalLockedAmount = 0;
     uint256 public immediateWithdrawalFee = 20; // 20 means 2% or 25 means 2.5%
-    uint256 public immediateWithdrawalFeeCollected = 0;
+    uint256 public immediateWithdrawalFeeCollected = 0; // fee collected on the contract if the "communityWallet" not set
     address public communityWallet;
 
     enum MembershipType {
@@ -124,6 +124,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     event EvtDeactivateUser(string userId);
     event EvtActivateUser(string userId);
     event EvtWithdrawByAdmin(address indexed recipient, uint256 amount);
+    event EvtTakeImmediateWithdrawalFeeCollected(
+        address indexed recipient,
+        uint256 amount
+    );
 
     constructor(address _lockupToken, address _communityWallet) {
         lockupToken = IERC20(_lockupToken);
@@ -422,15 +426,19 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             lockupToken.safeTransfer(msg.sender, withdrawAmount);
         } else {
             stats.lockedAmount -= withdrawAmount;
-            immediateWithdrawalFeeCollected += fee;
 
             // Immediate withdrawal fee is deducted directly from the withdrawnAmount
             // rather than from the principal
             lockupToken.safeTransfer(msg.sender, withdrawAmount - fee);
 
-            // Transfer fee to the community wallet if any. Fee can also be disabled by setting to zero
-            if (fee > 0 && communityWallet != address(0)) {
-                lockupToken.safeTransfer(communityWallet, fee);
+            // Transfer fee to the community wallet if any. Otherwise, keep it on the contract.
+            if (fee > 0) {
+                if (communityWallet != address(0)) {
+                    lockupToken.safeTransfer(communityWallet, fee);
+                } else {
+                    // Keep the fee on the contract
+                    immediateWithdrawalFeeCollected += fee;
+                }
             }
         }
 
@@ -730,6 +738,19 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         lockupToken.safeTransfer(recipient, amount);
 
         emit EvtWithdrawByAdmin(recipient, amount);
+    }
+
+    function takeImmediateWithdrawalFeeCollected(
+        address recipient,
+        uint256 amount
+    ) external isOwner {
+        require(amount > 0, "Invalid amount");
+        require(immediateWithdrawalFeeCollected >= amount, "Insufficient fee collected");
+
+        immediateWithdrawalFeeCollected -= amount;
+        lockupToken.safeTransfer(recipient, amount);
+
+        emit EvtTakeImmediateWithdrawalFeeCollected(recipient, amount);
     }
 
     /**
