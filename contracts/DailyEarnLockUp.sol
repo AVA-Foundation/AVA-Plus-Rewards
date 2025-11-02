@@ -113,6 +113,8 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         LockupCondition lockupCondition
     );
     event EvtSetMaxTotalLockedAmount(uint256 maxTotalLockedAmount);
+    event EvtUpdateCommonMinLockupAmount(uint256 newMinLockupAmount);
+    event EvtUpdateCommonWithdrawPeriod(uint256 newWithdrawPeriodInSeconds);
     event EvtSetImmediateWithdrawalFee(uint256 immediateWithdrawalFee);
     event EvtSetCommunityWallet(address communityWallet);
     event EvtInitUserData(
@@ -852,6 +854,8 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         membershipTypeToCondition[MembershipType.SmartDiamond]
             .minLockupAmountPerTx = newMinLockupAmount;
+
+        emit EvtUpdateCommonMinLockupAmount(newMinLockupAmount);
     }
 
     function updateCommonWithdrawPeriod(
@@ -874,6 +878,8 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         membershipTypeToCondition[MembershipType.SmartDiamond]
             .withdrawPeriod = newWithdrawPeriodInSeconds;
+
+        emit EvtUpdateCommonWithdrawPeriod(newWithdrawPeriodInSeconds);
     }
 
     ///////////////////// Getter ///////////////////////
