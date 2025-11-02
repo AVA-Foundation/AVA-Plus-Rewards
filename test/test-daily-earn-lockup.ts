@@ -232,34 +232,34 @@ describe("Test if daily earnings are correctly calculated for locked tokens", ()
     expect(userIdToLockupStats[3] == 0n).to.equal(true); // withdrawReqAmount
     expect(userIdToLockupStats[4] == 0n).to.equal(true); // earnedAmount
 
-    // Not yet one day passed, so no earnings yet
+    // Not yet one day passed, but still earnings as calculated based on seconds elapsed
     await time.increase(ONE_DAY - 1);
-    let [earn, daysPassedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
-      USER1_DATA.walletAddress
-    );
-    expect(earn == 0n).to.equal(true);
-    expect(daysPassedSinceLastClaim === 0n).to.equal(true);
-
-    // One day passed, so earnings should be calculated
-    await time.increase(1);
-    [earn, daysPassedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
+    let [earn, timeElapsedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
       USER1_DATA.walletAddress
     );
     expect(earn > 0n).to.equal(true);
-    expect(daysPassedSinceLastClaim === 1n).to.equal(true);
+    expect(timeElapsedSinceLastClaim > 0n).to.equal(true);
 
-    const calculatedEarn = (USER1_DATA.lockedTokens * COMMON_APR * daysPassedSinceLastClaim) / BigInt(365 * APR_FACTOR);
+    // One day passed, so earnings should be calculated
+    await time.increase(1);
+    [earn, timeElapsedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
+      USER1_DATA.walletAddress
+    );
+    expect(earn > 0n).to.equal(true);
+    expect(timeElapsedSinceLastClaim === BigInt(ONE_DAY)).to.equal(true);
+
+    const calculatedEarn = (USER1_DATA.lockedTokens * COMMON_APR * timeElapsedSinceLastClaim) / BigInt(APR_FACTOR * 365 * ONE_DAY);
     expect(earn).to.equal(calculatedEarn);
 
     // Claim the earned amount
     const claimTx = await DailyEarnLockUpContract.connect(user1).claim();
     const claimReceipt = await claimTx.wait();
 
-    [earn, daysPassedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
+    [earn, timeElapsedSinceLastClaim] = await DailyEarnLockUpContract.getEarnAmountFromLockupStats(
       USER1_DATA.walletAddress
     );
     expect(earn == 0n).to.equal(true);
-    expect(daysPassedSinceLastClaim === 0n).to.equal(true);
+    expect(timeElapsedSinceLastClaim === 0n).to.equal(true);
   });
 
   it("Verify lockup stats and withdraw flow", async () => {

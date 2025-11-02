@@ -357,11 +357,11 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         (
             uint256 earn,
-            uint256 daysPassedSinceLastClaim
+            uint256 timeElapsedSinceLastClaim
         ) = getEarnAmountFromWithdrawRequest(walletAddress);
 
         if (earn > 0) {
-            stats.lastTimeStamp += daysPassedSinceLastClaim * 1 days;
+            stats.lastTimeStamp += timeElapsedSinceLastClaim;
             stats.earnedAmount += earn;
 
             lockupToken.safeTransfer(walletAddress, earn);
@@ -548,17 +548,13 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         // Determine the time elapsed since the last claim.
         uint256 timeElapsedSinceLastClaim = block.timestamp - lastTimeStamp;
-        // Calculate the number of full days that have passed.
-        uint256 daysPassedSinceLastClaim = timeElapsedSinceLastClaim / 1 days;
 
-        if (daysPassedSinceLastClaim > 0) {
-            uint256 earn = (lockedAmountChecked *
-                getTotalApr(walletAddress) *
-                daysPassedSinceLastClaim) / (PERCENT_FACTOR * 365);
+        uint256 earn = (lockedAmountChecked *
+            getTotalApr(walletAddress) *
+            timeElapsedSinceLastClaim) / (PERCENT_FACTOR * 365 days);
 
-            if (earn > 0) {
-                return (earn, daysPassedSinceLastClaim);
-            }
+        if (earn > 0) {
+            return (earn, timeElapsedSinceLastClaim);
         }
 
         return (0, 0);
@@ -581,12 +577,12 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         (
             uint256 earn,
-            uint256 daysPassedSinceLastClaim
+            uint256 timeElapsedSinceLastClaim
         ) = getEarnAmountFromLockupStats(walletAddress);
         if (earn > 0) {
             // Update lastTimeStamp to the timestamp rounded up to the last full day.
             LockupStats storage stats = userIdToLockupStats[userId];
-            stats.lastTimeStamp += daysPassedSinceLastClaim * 1 days;
+            stats.lastTimeStamp += timeElapsedSinceLastClaim;
             stats.earnedAmount += earn;
 
             lockupToken.safeTransfer(walletAddress, earn);
