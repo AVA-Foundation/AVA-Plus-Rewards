@@ -17,8 +17,8 @@ describe("Test if daily earnings are correctly calculated for locked tokens", ()
   let AVATokenContractAddress: string;
 
   let COMMON_MIN_LOCKUP_AMOUNT = BigInt(250 * 10 ** 18); // 250 tokens
-  let THIRTY_DAYS = 30 * 24 * 60 * 60; // 30 days in seconds
-  let COMMON_MIN_WITHDRAW_PERIOD = BigInt(THIRTY_DAYS); // 30 days in seconds
+  let TEN_DAYS = 10 * 24 * 60 * 60; // 10 days in seconds
+  let COMMON_MIN_WITHDRAW_PERIOD = BigInt(TEN_DAYS); // 10 days in seconds
   let COMMON_APR = BigInt(50); // 50 means 5% or 75 means 7.5%
   let APR_FACTOR = 1000; // APR factor for calculations
 
@@ -289,7 +289,7 @@ describe("Test if daily earnings are correctly calculated for locked tokens", ()
     );
 
     // Not yet thirty days passed, so no earnings yet
-    await time.increase(THIRTY_DAYS);
+    await time.increase(TEN_DAYS);
 
     await DailyEarnLockUpContract.connect(user2).withdraw(false, 0);
 

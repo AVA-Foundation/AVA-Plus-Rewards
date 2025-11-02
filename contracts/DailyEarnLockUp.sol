@@ -14,7 +14,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     uint256 public constant PERCENT_FACTOR = 1e3;
 
     uint256 public constant COMMON_MIN_LOCKUP_AMOUNT = 250 * 1e18; // 250 tokens
-    uint256 public constant COMMON_MIN_WITHDRAW_PERIOD = 30 days;
+    uint256 public constant COMMON_MIN_WITHDRAW_PERIOD = 10 days;
     uint256 public constant COMMON_APR = 50; // 50 means 5% or 75 means 7.5%
 
     uint256 public maxTotalLockedAmount = 5_000_000 * 1e18;
