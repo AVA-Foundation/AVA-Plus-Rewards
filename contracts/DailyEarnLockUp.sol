@@ -104,10 +104,6 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         MembershipType membershipType,
         uint256 amountNFTs
     );
-    event EvtBatchSetWalletAddressToMembershipType(
-        address[] walletAddresses,
-        MembershipType[] membershipTypes
-    );
     event EvtSetMembershipTypeToCondition(
         MembershipType membershipType,
         LockupCondition lockupCondition
