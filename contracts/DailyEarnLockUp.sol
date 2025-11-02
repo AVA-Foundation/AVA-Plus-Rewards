@@ -752,6 +752,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     ) external isOwner {
         require(amount > 0, "Invalid amount");
         require(totalLockedAmount >= amount, "Insufficient locked amount");
+        require(recipient != address(0), "Invalid recipient address");
 
         totalLockedAmount -= amount;
         lockupToken.safeTransfer(recipient, amount);
