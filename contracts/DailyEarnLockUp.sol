@@ -130,6 +130,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     );
 
     constructor(address _lockupToken, address _communityWallet) {
+        require(_lockupToken != address(0), "Invalid token address");
         lockupToken = IERC20(_lockupToken);
         communityWallet = _communityWallet;
 
