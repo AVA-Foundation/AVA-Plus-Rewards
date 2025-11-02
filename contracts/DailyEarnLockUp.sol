@@ -648,17 +648,15 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         require(bytes(userId).length > 0, "Invalid userId");
         require(walletAddress != address(0), "Invalid wallet address");
 
-        // If userId already has a wallet address, we need to clear it first.
-        if (userIdToWalletAddress[userId] != address(0)) {
-            walletAddressToUserId[userIdToWalletAddress[userId]] = "";
-        }
+        require(
+            userIdToWalletAddress[userId] == address(0),
+            "User ID already associated with a wallet address"
+        );
 
-        // If wallet address already has a userId, we need to clear it first.
-        if (bytes(walletAddressToUserId[walletAddress]).length > 0) {
-            userIdToWalletAddress[
-                walletAddressToUserId[walletAddress]
-            ] = address(0);
-        }
+        require(
+            bytes(walletAddressToUserId[walletAddress]).length == 0,
+            "Wallet address already associated with a user ID"
+        );
 
         userIdToWalletAddress[userId] = walletAddress;
         walletAddressToUserId[walletAddress] = userId;
