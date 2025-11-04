@@ -794,6 +794,11 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function setImmediateWithdrawalFee(
         uint256 _immediateWithdrawalFee
     ) external isOwner {
+        require(
+            _immediateWithdrawalFee < PERCENT_FACTOR,
+            "Invalid immediate withdrawal fee"
+        );
+
         // can be zero
         immediateWithdrawalFee = _immediateWithdrawalFee;
 
