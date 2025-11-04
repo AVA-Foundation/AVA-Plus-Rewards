@@ -355,13 +355,11 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         LockupStats storage stats = userIdToLockupStats[userId];
 
-        (
-            uint256 earn,
-            uint256 timeElapsedSinceLastClaim
-        ) = getEarnAmountFromWithdrawRequest(walletAddress);
+        (uint256 earn, ) = getEarnAmountFromWithdrawRequest(walletAddress);
 
         if (earn > 0) {
-            stats.lastTimeStamp += timeElapsedSinceLastClaim;
+            // Do not update stats.lastTimeStamp here as irrelevant to the withdraw request
+            // stats.lastTimeStamp += timeElapsedSinceLastClaim;
             stats.earnedAmount += earn;
 
             lockupToken.safeTransfer(walletAddress, earn);
@@ -382,6 +380,8 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         // De-activated user cannot get any earn
         if (!userIdToLockupStats[userId].deactivated) {
+            _claimReward(userId, msg.sender);
+
             _claimRewardFromWithdrawRequest(msg.sender);
         }
 
