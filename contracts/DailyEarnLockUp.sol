@@ -839,6 +839,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function updateCommonMinLockupAmount(
         uint256 newMinLockupAmount
     ) external isOwner {
+        uint256 oldMinLockupAmount = membershipTypeToCondition[
+            MembershipType.SmartSteel
+        ].minLockupAmountPerTx;
+
         membershipTypeToCondition[MembershipType.SmartSteel]
             .minLockupAmountPerTx = newMinLockupAmount;
 
@@ -858,8 +862,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             .minLockupAmountPerTx = newMinLockupAmount;
 
         emit EvtUpdateCommonMinLockupAmount(
-            membershipTypeToCondition[MembershipType.SmartSteel]
-                .minLockupAmountPerTx,
+            oldMinLockupAmount,
             newMinLockupAmount
         );
     }
@@ -867,6 +870,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     function updateCommonWithdrawPeriod(
         uint256 newWithdrawPeriodInSeconds
     ) external isOwner {
+        uint256 oldWithdrawPeriodInSeconds = membershipTypeToCondition[
+            MembershipType.SmartSteel
+        ].withdrawPeriod;
+
         membershipTypeToCondition[MembershipType.SmartSteel]
             .withdrawPeriod = newWithdrawPeriodInSeconds;
 
@@ -886,7 +893,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             .withdrawPeriod = newWithdrawPeriodInSeconds;
 
         emit EvtUpdateCommonWithdrawPeriod(
-            membershipTypeToCondition[MembershipType.SmartSteel].withdrawPeriod,
+            oldWithdrawPeriodInSeconds,
             newWithdrawPeriodInSeconds
         );
     }
