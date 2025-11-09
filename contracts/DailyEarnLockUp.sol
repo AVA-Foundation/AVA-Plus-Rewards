@@ -631,16 +631,23 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
      */
     function activateUser(string memory userId) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
-        require(
-            userIdToLockupStats[userId].deactivated == true,
-            "userId already activated"
-        );
 
-        userIdToLockupStats[userId].deactivated = false;
+        LockupStats storage stats = userIdToLockupStats[userId];
+
+        require(stats.deactivated == true, "userId already activated");
+
+        stats.deactivated = false;
 
         // This ensures that, after being re-activated from the previous deactivation,
         // the "lastTimeStamp" (i.e. start time for accrued rewards) is updated to the time-being.
-        userIdToLockupStats[userId].lastTimeStamp = block.timestamp;
+        stats.lastTimeStamp = block.timestamp;
+
+        // Clear pending withdrawal request if any
+        if (stats.withdrawReqTimeStamp > 0) {
+            stats.lockedAmount += stats.withdrawReqAmount;
+            stats.withdrawReqTimeStamp = 0;
+            stats.withdrawReqAmount = 0;
+        }
 
         emit EvtActivateUser(userId);
     }
