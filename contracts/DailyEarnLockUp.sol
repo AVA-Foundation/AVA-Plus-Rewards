@@ -277,10 +277,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         // before increasing the lockedAmount.
         if (userIdToLockupStats[userId].lockedAmount > 0) {
             _claimReward(userId, msg.sender);
-        } else {
-            // For a newbie, initialize lastTimeStamp to current time.
-            userIdToLockupStats[userId].lastTimeStamp = block.timestamp;
         }
+
+        // Always update lastTimeStamp to current time.
+        userIdToLockupStats[userId].lastTimeStamp = block.timestamp;
 
         // Increase the lockedAmount.
         userIdToLockupStats[userId].lockedAmount += lockedAmount;
@@ -390,6 +390,9 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
             _claimRewardFromWithdrawRequest(msg.sender);
         }
+
+        // Always update lastTimeStamp to current time.
+        userIdToLockupStats[userId].lastTimeStamp = block.timestamp;
 
         stats.lockedAmount += stats.withdrawReqAmount;
         stats.withdrawReqTimeStamp = 0;
