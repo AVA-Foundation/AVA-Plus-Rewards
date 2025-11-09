@@ -717,6 +717,15 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
             userIdToMembershipType[userId] == MembershipType.SmartDiamond,
             "Not SmartDiamond membership type"
         );
+        require(
+            userIdToAmountNFTs[userId] != amountNFTs,
+            "UserId already has this amountNFTs"
+        );
+
+        // In case the userId is updated with a new amountNFTs, claimReward first with the current amountNFTs.
+        // This ensures that any rewards accrued under the current amountNFTs are claimed before changing it.
+        address walletAddress = userIdToWalletAddress[userId];
+        _claimReward(userId, walletAddress);
 
         userIdToAmountNFTs[userId] = amountNFTs;
 
