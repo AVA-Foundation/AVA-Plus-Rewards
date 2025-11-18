@@ -427,7 +427,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
             LockupCondition memory condition = getLockupCondition(msg.sender);
             require(
-                block.timestamp >
+                block.timestamp >=
                     stats.withdrawReqTimeStamp + condition.withdrawPeriod,
                 "Minimum withdraw period not met"
             );
