@@ -742,6 +742,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     ) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
         require(
+            membershipType != MembershipType.Unknown,
+            "Invalid mmembershipType"
+        );
+        require(
             userIdToMembershipType[userId] != MembershipType.Unknown,
             "User data not yet set. Pls use the function initUserData"
         );
