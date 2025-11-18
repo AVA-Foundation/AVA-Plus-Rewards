@@ -874,6 +874,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         address recipient,
         uint256 amount
     ) external isOwner {
+        require(recipient != address(0), "Invalid recipient address");
         require(amount > 0, "Invalid amount");
         require(
             immediateWithdrawalFeeCollected >= amount,
