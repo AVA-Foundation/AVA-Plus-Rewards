@@ -740,6 +740,10 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     ) external isAuthorized {
         require(bytes(userId).length > 0, "Invalid userId");
         require(walletAddress != address(0), "Invalid wallet address");
+        require(
+            membershipType != MembershipType.Unknown,
+            "Invalid mmembershipType"
+        );
 
         require(
             userIdToWalletAddress[userId] == address(0),
@@ -754,7 +758,9 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         userIdToWalletAddress[userId] = walletAddress;
         walletAddressToUserId[walletAddress] = userId;
 
-        userIdToAmountNFTs[userId] = amountNFTs;
+        if (membershipType == MembershipType.SmartDiamond) {
+            userIdToAmountNFTs[userId] = amountNFTs;
+        }
 
         userIdToMembershipType[userId] = membershipType;
 
