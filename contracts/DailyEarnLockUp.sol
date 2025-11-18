@@ -386,9 +386,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         // De-activated user cannot get any earn
         if (!userIdToLockupStats[userId].deactivated) {
-            _claimReward(userId, msg.sender);
-
-            _claimRewardFromWithdrawRequest(msg.sender);
+            _claimRewardAllowed(userId, msg.sender);
         }
 
         // Always update lastTimeStamp to current time.
@@ -482,6 +480,58 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     }
 
     /**
+     * @notice Get the allowed earn amount from both lockedAmount and withdrawReqAmount that respects the maxLockupAmountPerTotal controlled by membership type.
+     */
+    function getEarnAmountAllowed(
+        address walletAddress
+    ) public view returns (uint256) {
+        string memory userId = _getUserId(walletAddress);
+        LockupStats memory stats = userIdToLockupStats[userId];
+
+        // Get earn from lockedAmount
+        (uint256 earnFromLockedAmount, ) = _getEarnAmount(
+            walletAddress,
+            stats.lockedAmount,
+            stats.lastTimeStamp
+        );
+
+        // Control the earn from withdrawReqAmount
+        uint256 withdrawReqAmountMaxAllowedToEarn;
+        MembershipType membershipType = userIdToMembershipType[userId];
+        LockupCondition
+            memory membershipTypeCondition = membershipTypeToCondition[
+                membershipType
+            ];
+
+        if (
+            earnFromLockedAmount > 0 &&
+            stats.lockedAmount >=
+            membershipTypeCondition.maxLockupAmountPerTotal
+        ) {
+            withdrawReqAmountMaxAllowedToEarn = 0;
+        } else {
+            withdrawReqAmountMaxAllowedToEarn =
+                membershipTypeCondition.maxLockupAmountPerTotal -
+                stats.lockedAmount;
+        }
+
+        uint256 withdrawReqAmountAllowedToEarn = stats.withdrawReqAmount;
+        if (
+            withdrawReqAmountAllowedToEarn > withdrawReqAmountMaxAllowedToEarn
+        ) {
+            withdrawReqAmountAllowedToEarn = withdrawReqAmountMaxAllowedToEarn;
+        }
+
+        (uint256 earnFromWithdrawReqAmount, ) = _getEarnAmount(
+            walletAddress,
+            withdrawReqAmountAllowedToEarn,
+            stats.withdrawReqTimeStamp
+        );
+
+        return (earnFromLockedAmount + earnFromWithdrawReqAmount);
+    }
+
+    /**
      * @notice Based on the current LockupStats, get earn amount and the number of elapsed days since last time for a given walletAddress.
      */
     function getEarnAmountFromLockupStats(
@@ -570,6 +620,35 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
     }
 
     /**
+     * @dev Private function to claim allowed reward in case of withdrawal request cancel. It ensures that maxLockupAmountPerTotal is respected.
+     * @param userId The user ID.
+     * @param walletAddress The walletAddress whose rewards are being claimed.
+     */
+    function _claimRewardAllowed(
+        string memory userId,
+        address walletAddress
+    ) private returns (uint256) {
+        // De-activated user cannot get any earn
+        if (userIdToLockupStats[userId].deactivated) {
+            return 0;
+        }
+
+        uint256 earn = getEarnAmountAllowed(walletAddress);
+        if (earn > 0) {
+            LockupStats storage stats = userIdToLockupStats[userId];
+            stats.lastTimeStamp = block.timestamp;
+            stats.earnedAmount += earn;
+
+            lockupToken.safeTransfer(walletAddress, earn);
+            emit EvtClaim(walletAddress, earn);
+            return earn;
+        } else {
+            // If no earn, return 0.
+            return 0;
+        }
+    }
+
+    /**
      * @dev Private function to claim rewards for a given walletAddress.
      * It calculates how many full days have passed since the last claim,
      * computes the earn, transfers the earn tokens, and updates lastTimeStamp.
@@ -617,9 +696,7 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
 
         // Auto send any accrued rewards before deactivation.
         address walletAddress = userIdToWalletAddress[userId];
-        _claimReward(userId, walletAddress);
-
-        _claimRewardFromWithdrawRequest(walletAddress);
+        _claimRewardAllowed(userId, walletAddress);
 
         userIdToLockupStats[userId].deactivated = true;
 
