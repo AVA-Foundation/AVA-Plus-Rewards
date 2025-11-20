@@ -354,27 +354,6 @@ contract DailyEarnLockUp is OwnPauseAuth, ReentrancyGuard {
         emit EvtWithdrawRequestSubmit(msg.sender, withdrawnAmount);
     }
 
-    function _claimRewardFromWithdrawRequest(
-        address walletAddress
-    ) private returns (uint256) {
-        string memory userId = _getUserId(walletAddress);
-
-        LockupStats storage stats = userIdToLockupStats[userId];
-
-        (uint256 earn, ) = getEarnAmountFromWithdrawRequest(walletAddress);
-
-        if (earn > 0) {
-            // Do not update stats.lastTimeStamp here as irrelevant to the withdraw request
-            // stats.lastTimeStamp += timeElapsedSinceLastClaim;
-            stats.earnedAmount += earn;
-
-            lockupToken.safeTransfer(walletAddress, earn);
-            emit EvtClaim(walletAddress, earn);
-        }
-
-        return earn;
-    }
-
     /**
      * @notice Cancel the submitted withdrawal request.
      */
