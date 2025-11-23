@@ -20,6 +20,7 @@
   "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.14",
     "hardhat": "2.26.3",
     "rimraf": "^5.0.5"
   },

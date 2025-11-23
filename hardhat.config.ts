@@ -34,6 +34,9 @@ module.exports = {
       accounts: [`${process.env.DEPLOYER_ACCOUNT_PRIV_KEY}`],
     },
   },
+  etherscan: {
+    apiKey: "KV3T32M5BVE8Q69AW2953GT3FKX4XHI9D7",
+  },
   solidity: {
     version: "0.8.30",
     settings: {
