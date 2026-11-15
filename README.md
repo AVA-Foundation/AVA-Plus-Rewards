@@ -20,11 +20,21 @@
 
 `npm run deploy-hardhat`
 
+**For GateKeeper**
+
+`npm run deploy-hardhat-gatekeeper`
+
 ### Deploy to IOTA EVM testnet
 
 `npm run deploy-iotaEvmTestnet`
 
 The deployed contract addresses are stored in the folder `deployed-contract-address\iotaEvmTestnet`
+
+**For GateKeeper**
+
+`npm run deploy-iotaEvmTestnet-gatekeeper`
+
+The deployed contract addresses are stored in the folder `deployed-contract-address\iotaEvmTestnet\gatekeeper`
 
 **Notice**
 
@@ -39,6 +49,12 @@ The AVA token address on ETH mainnet (`0xa6C0c097741D55ECd9a3A7DeF3A8253fD022ceB
 `npm run deploy-ethereumMainnet`
 
 The deployed contract addresses are stored in the folder `deployed-contract-address\ethereumMainnet`
+
+**For GateKeeper**
+
+`npm run deploy-ethereumMainnet-gatekeeper`
+
+The deployed contract addresses are stored in the folder `deployed-contract-address\ethereumMainnet\gatekeeper`
 
 ### Verify/publish contract
 
