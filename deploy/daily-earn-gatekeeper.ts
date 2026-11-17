@@ -10,12 +10,12 @@ async function deployDailyEarnGateKeeper(
   );
   await DailyEarnGateKeeperContract.waitForDeployment();
 
-  // if (network.name !== "hardhat") {
-  console.log(
-    "Deployed DailyEarnGateKeeperContract address:",
-    await DailyEarnGateKeeperContract.getAddress(),
-  );
-  // }
+  if (network.name !== "hardhat") {
+    console.log(
+      "Deployed DailyEarnGateKeeperContract address:",
+      await DailyEarnGateKeeperContract.getAddress(),
+    );
+  }
 
   return DailyEarnGateKeeperContract;
 }
